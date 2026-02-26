@@ -92,7 +92,13 @@ def build_playlists(songs: List[Song], profile: Dict[str, object]) -> PlaylistMa
         normalized = normalize_song(song)
         mood = classify_song(normalized, profile)
         normalized["mood"] = mood
-        playlists[mood].append(normalized)
+
+        existing_keys = {
+            (str(s.get("title", "")), str(s.get("artist", ""))) for s in playlists[mood]
+        }
+        song_key = (str(normalized.get("title", "")), str(normalized.get("artist", "")))
+        if song_key not in existing_keys:
+            playlists[mood].append(normalized)
 
     return playlists
 
@@ -116,7 +122,7 @@ def compute_playlist_stats(playlists: PlaylistMap) -> Dict[str, object]:
     chill = playlists.get("Chill", [])
     mixed = playlists.get("Mixed", [])
 
-    total = len(hype)
+    total = len(hype) + len(chill) + len(mixed)
     hype_ratio = len(hype) / total if total > 0 else 0.0
 
     avg_energy = 0.0
@@ -168,7 +174,7 @@ def search_songs(
 
     for song in songs:
         value = str(song.get(field, "")).lower()
-        if value and value in q:
+        if value and q in value:
             filtered.append(song)
 
     return filtered
